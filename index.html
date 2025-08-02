@@ -1,0 +1,362 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Yapılacaklar Listesi</title>
+  <link rel="icon" type="image/png" href="https://i.ibb.co/q3YVD3t7/asdasdasdasdasdasd.png">
+  <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #1e1e1e;
+      --text-color: #fff;
+      --item-bg: #3a3a3a;
+    }
+    body.light {
+      --bg-color: #fdfdfd;
+      --text-color: #222;
+      --item-bg: #f5f5f5;
+    }
+    body {
+      font-family: 'Patrick Hand', cursive;
+      background: url('https://www.transparenttextures.com/patterns/notebook.png');
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: background 0.3s, color 0.3s;
+    }
+    h1 {
+      margin-bottom: 1rem;
+      font-size: 2.5rem;
+      color: #ff4c4c;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
+    }
+    .todo-container {
+      background: linear-gradient(145deg, #2a2a2a, #1b1b1b);
+      border-radius: 16px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 750px;
+      box-shadow: 0 0 15px rgba(255,255,255,0.1);
+    }
+    .todo-input {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    input[type="text"], input[type="datetime-local"] {
+      padding: 0.6rem;
+      font-size: 1rem;
+      border-radius: 10px;
+      border: none;
+      background: #444;
+      color: #fff;
+      width: 100%;
+    }
+    .todo-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 0.5rem;
+    }
+    button, select {
+      padding: 0.6rem 1rem;
+      background: #555;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #777;
+    }
+    .todo-filters-row, .search-row, .toggle-completed-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      background: var(--item-bg);
+      margin-bottom: 0.6rem;
+      padding: 0.6rem;
+      border-radius: 10px;
+      box-shadow: inset 0 0 5px rgba(255,255,255,0.05);
+    }
+    .todo-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    li.completed span.todo-text {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+    .index {
+      color: red;
+      font-weight: bold;
+    }
+    .summary {
+      font-size: 1rem;
+      color: #ff4c4c;
+      font-weight: bold;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+      margin-top: 1rem;
+    }
+    .completed-date, .reminder-alert {
+      font-size: 0.85rem;
+      color: #aaa;
+      margin-left: 2rem;
+    }
+    .category-badge {
+      font-size: 0.85rem;
+      font-weight: bold;
+      padding: 0 6px;
+      border-radius: 6px;
+      margin-right: 4px;
+      opacity: 0.8;
+    }
+    .badge-kisisel { background-color: #b48ecd; color: white; }
+    .badge-is { background-color: #5fa8d3; color: white; }
+    .badge-alisveris { background-color: #8fd694; color: black; }
+    .logo {
+      margin-top: 2rem;
+      text-align: center;
+    }
+    .logo img {
+      max-width: 100px;
+      opacity: 0.8;
+    }
+    .theme-toggle {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 999;
+    }
+    @media print {
+      button, .todo-input, .summary, .logo, .theme-toggle {
+        display: none;
+      }
+      body {
+        background: white;
+        color: black;
+      }
+    }
+  </style>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ff4c4c"/>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js');
+      });
+    }
+  </script>
+
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()">Tema Değiştir</button>
+  <h1 id="animatedTitle">Yapılacaklar Listesi</h1>
+  <div class="todo-container">
+    <div class="todo-input">
+      <input type="text" id="todoText" placeholder="Yeni madde yaz..." />
+      <input type="datetime-local" id="reminderTime" />
+      <div class="todo-buttons">
+        <select id="todoCategory">
+          <option value="">Kategori Seç</option>
+          <option value="Kişisel">Kişisel</option>
+          <option value="İş">İş</option>
+          <option value="Alışveriş">Alışveriş</option>
+        </select>
+        <button onclick="addTodo()">Ekle</button>
+        <button onclick="downloadPDF()">PDF</button>
+        <button onclick="clearTodos()">Verileri Temizle</button>
+      </div>
+    </div>
+
+    <div class="todo-filters-row">
+      <select id="filterCategory" onchange="renderTodos()">
+        <option value="Hepsi">Kategorileri Filtrele</option>
+        <option value="Kişisel">Kişisel</option>
+        <option value="İş">İş</option>
+        <option value="Alışveriş">Alışveriş</option>
+      </select>
+      <input type="text" id="searchBox" placeholder="Ara..." />
+      <button onclick="renderTodos()">Ara</button>
+      <button onclick="clearSearch()">Temizle</button>
+    </div>
+    <div class="toggle-completed-row">
+      <button onclick="toggleCompleted()">Tamamlananları Gizle/Göster</button>
+    </div>
+    <ul id="todoList"></ul>
+    <div class="summary" id="summary"></div>
+  </div>
+  <div class="logo">
+    <a href="https://www.birkanarslanfiliz.com" target="_blank">
+      <img src="https://i.ibb.co/q3YVD3t7/asdasdasdasdasdasd.png" alt="Logo">
+    </a>
+  </div>
+<script>
+let todos = JSON.parse(localStorage.getItem('todos')) || [];
+let hideCompleted = false;
+let theme = localStorage.getItem("theme") || "dark";
+if (theme === "light") document.body.classList.add("light");
+
+function saveTodos() {
+  localStorage.setItem('todos', JSON.stringify(todos));
+}
+function formatDate(date) {
+  return new Date(date).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+function toggleCompleted() {
+  hideCompleted = !hideCompleted;
+  renderTodos();
+}
+function clearSearch() {
+  document.getElementById("searchBox").value = "";
+  renderTodos();
+}
+function renderTodos() {
+  const list = document.getElementById('todoList');
+  list.innerHTML = '';
+  const searchTerm = document.getElementById("searchBox").value.toLowerCase();
+  const filterCat = document.getElementById("filterCategory").value;
+  let completed = 0;
+
+  todos.forEach((todo, i) => {
+    if (filterCat !== "Hepsi" && todo.category !== filterCat) return;
+    if (searchTerm && !todo.text.toLowerCase().includes(searchTerm)) return;
+    if (hideCompleted && todo.done) return;
+
+    const li = document.createElement('li');
+    if (todo.done) li.classList.add('completed');
+
+    const topRow = document.createElement('div');
+    topRow.className = 'todo-top';
+
+    const index = document.createElement('span');
+    index.className = 'index';
+    index.textContent = (i + 1) + '.';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = todo.done;
+    checkbox.disabled = !!todo.completedAt;
+    checkbox.onchange = () => {
+      if (!todo.done) {
+        todo.done = true;
+        todo.completedAt = new Date().toISOString();
+      } else {
+        todo.done = false;
+        delete todo.completedAt;
+      }
+      saveTodos();
+      renderTodos();
+    };
+
+    const text = document.createElement('span');
+    text.className = 'todo-text';
+    text.contentEditable = !todo.completedAt;
+    text.textContent = todo.text;
+    text.onblur = () => {
+      todo.text = text.textContent;
+      saveTodos();
+    };
+
+    const category = document.createElement('span');
+    category.classList.add('category-badge');
+    if (todo.category === "Kişisel") category.classList.add('badge-kisisel');
+    else if (todo.category === "İş") category.classList.add('badge-is');
+    else if (todo.category === "Alışveriş") category.classList.add('badge-alisveris');
+    category.textContent = todo.category || "";
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'Sil';
+    deleteBtn.onclick = () => {
+      todos.splice(i, 1);
+      saveTodos();
+      renderTodos();
+    };
+    if (todo.completedAt) deleteBtn.disabled = true;
+
+    topRow.append(index, checkbox, category, text, deleteBtn);
+    li.appendChild(topRow);
+
+    if (todo.completedAt) {
+      const dateInfo = document.createElement('div');
+      dateInfo.className = 'completed-date';
+      dateInfo.textContent = `Tamamlandı: ${formatDate(todo.completedAt)}`;
+      li.appendChild(dateInfo);
+    }
+    if (todo.reminder && !todo.done && new Date(todo.reminder) <= new Date()) {
+      const reminder = document.createElement('div');
+      reminder.className = 'reminder-alert';
+      reminder.textContent = `⏰ Hatırlatma zamanı geldi!`;
+      li.appendChild(reminder);
+    }
+    list.appendChild(li);
+    if (todo.done) completed++;
+  });
+  const summary = document.getElementById("summary");
+  const total = todos.length;
+  const percent = total ? Math.round((completed / total) * 100) : 0;
+  summary.textContent = `Toplam: ${total} | Tamamlanan: ${completed} | %${percent}`;
+}
+function addTodo() {
+  const text = document.getElementById('todoText').value.trim();
+  const category = document.getElementById('todoCategory').value;
+  const reminder = document.getElementById('reminderTime').value;
+  if (text) {
+    todos.push({ text, done: false, category: category, reminder: reminder || null });
+    saveTodos();
+    renderTodos();
+    document.getElementById('todoText').value = '';
+    document.getElementById('reminderTime').value = '';
+  }
+}
+function downloadPDF() {
+  window.print();
+}
+function clearTodos() {
+  if (confirm("Tüm verileri silmek istediğine emin misin?")) {
+    todos = [];
+    localStorage.removeItem('todos');
+    renderTodos();
+  }
+}
+function toggleTheme() {
+  document.body.classList.toggle("light");
+  theme = document.body.classList.contains("light") ? "light" : "dark";
+  localStorage.setItem("theme", theme);
+}
+const titleText = "Yapılacaklar Listesi";
+let titleIndex = 0;
+function animateTitleOnce() {
+  const el = document.getElementById("animatedTitle");
+  if (!el) return;
+  el.textContent = titleText.substring(0, titleIndex);
+  if (titleIndex < titleText.length) {
+    titleIndex++;
+    setTimeout(animateTitleOnce, 100);
+  }
+}
+animateTitleOnce();
+renderTodos();
+</script>
+</body>
+</html>
